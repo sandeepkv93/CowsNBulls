@@ -31,6 +31,9 @@ fun SecretSetupScreen(
     var usedDigits by remember { mutableStateOf(setOf<String>()) }
 
     val isSecretComplete = secret.length == settings.digits
+    val isSecretValid = isSecretComplete &&
+        (settings.allowRepeats || secret.toSet().size == secret.length) &&
+        (settings.allowLeadingZero || secret.firstOrNull() != '0')
 
     Column(
         modifier = Modifier
@@ -144,6 +147,23 @@ fun SecretSetupScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Validation Error
+            if (isSecretComplete && !isSecretValid) {
+                Text(
+                    text = when {
+                        !settings.allowRepeats && secret.toSet().size != secret.length ->
+                            "Digits must not repeat"
+                        !settings.allowLeadingZero && secret.firstOrNull() == '0' ->
+                            "Secret cannot start with 0"
+                        else -> ""
+                    },
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -168,7 +188,7 @@ fun SecretSetupScreen(
                 Button(
                     onClick = { onSecretSet(secret) },
                     modifier = Modifier.weight(1f),
-                    enabled = isSecretComplete
+                    enabled = isSecretValid
                 ) {
                     Text("Confirm", fontSize = 16.sp)
                 }
