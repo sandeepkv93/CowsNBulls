@@ -7,6 +7,11 @@ A modern Android implementation of the classic Bulls & Cows number guessing game
 - **VS Computer Mode** with AI opponent
   - 3 difficulty levels: Easy, Medium, Hard
   - Smart AI using candidate elimination algorithm
+- **🆕 Play with Friend (Multiplayer)**
+  - Real-time remote play via Firebase
+  - Room code system (6-character codes)
+  - Turn-based gameplay
+  - Live opponent progress tracking
 - **Smooth Gameplay**
   - Conditional auto-scrolling for guess history
   - Spring-based animations
@@ -39,15 +44,22 @@ cd CowsNBulls
 
 2. Open the project in Android Studio (Hedgehog or later)
 
-3. Sync Gradle and build the project:
+3. **For Multiplayer Mode:** Set up Firebase (optional)
+   - See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed instructions
+   - Download `google-services.json` from Firebase Console
+   - Place it in the `app/` directory
+
+4. Sync Gradle and build the project:
 ```bash
 ./gradlew build
 ```
 
-4. Run on an emulator or physical device:
+5. Run on an emulator or physical device:
 ```bash
 ./gradlew installDebug
 ```
+
+**Note:** VS Computer mode works without Firebase. Multiplayer requires Firebase setup.
 
 ## 🎯 How to Play
 
@@ -90,10 +102,12 @@ app/src/main/java/com/example/cowsnbulls/
 
 ## 🚀 Future Enhancements
 
-- Firebase multiplayer mode (Play with Friend)
 - Game statistics and leaderboards
-- Sound effects
+- Sound effects and music
 - Multiple theme options
+- Local same-device multiplayer
+- Achievements system
+- Game replay/history
 
 ## 👤 Author
 

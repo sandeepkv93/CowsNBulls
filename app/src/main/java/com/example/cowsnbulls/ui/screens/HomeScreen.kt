@@ -76,7 +76,7 @@ fun HomeScreen(
         ModeCard(
             icon = "👥",
             title = "Play with Friend",
-            description = "Battle remotely (Coming Soon)",
+            description = "Battle remotely with room codes",
             onClick = onPlayWithFriendClick
         )
 

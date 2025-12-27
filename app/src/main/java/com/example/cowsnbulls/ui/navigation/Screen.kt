@@ -22,4 +22,21 @@ sealed class Screen(val route: String) {
         }
     }
     object Settings : Screen("settings")
+    object MultiplayerSetup : Screen("multiplayer_setup")
+    object SecretSetup : Screen("secret_setup/{roomCode}/{playerId}/{digits}/{allowRepeats}/{allowLeadingZero}") {
+        fun createRoute(
+            roomCode: String,
+            playerId: String,
+            digits: Int,
+            allowRepeats: Boolean,
+            allowLeadingZero: Boolean
+        ): String {
+            return "secret_setup/$roomCode/$playerId/$digits/$allowRepeats/$allowLeadingZero"
+        }
+    }
+    object MultiplayerGame : Screen("multiplayer_game/{roomCode}/{playerId}") {
+        fun createRoute(roomCode: String, playerId: String): String {
+            return "multiplayer_game/$roomCode/$playerId"
+        }
+    }
 }
