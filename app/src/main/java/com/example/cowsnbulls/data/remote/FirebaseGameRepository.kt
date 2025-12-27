@@ -6,6 +6,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import kotlin.random.Random
 
 /**
@@ -31,18 +32,22 @@ class FirebaseGameRepository {
      */
     suspend fun createRoom(playerName: String, settings: GameSettings): Result<Pair<String, String>> {
         return try {
-            val roomCode = generateRoomCode()
-            val room = Room(
-                roomCode = roomCode,
-                player1 = PlayerData(name = playerName),
-                status = RoomStatus.WAITING,
-                settings = settings
-            )
+            withTimeout(10000) { // 10 second timeout
+                val roomCode = generateRoomCode()
+                val room = Room(
+                    roomCode = roomCode,
+                    player1 = PlayerData(name = playerName),
+                    status = RoomStatus.WAITING,
+                    settings = settings
+                )
 
-            roomsRef.child(roomCode).setValue(room).await()
-            Result.success(Pair(roomCode, "player1"))
+                roomsRef.child(roomCode).setValue(room).await()
+                Result.success(Pair(roomCode, "player1"))
+            }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Result.failure(Exception("Connection timeout. Please check:\n1. Internet connection\n2. Realtime Database is created in Firebase Console\n3. Database rules allow write access"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Failed to create room: ${e.message}\n\nMake sure Realtime Database is enabled in Firebase Console."))
         }
     }
 
@@ -51,30 +56,34 @@ class FirebaseGameRepository {
      */
     suspend fun joinRoom(roomCode: String, playerName: String): Result<String> {
         return try {
-            val snapshot = roomsRef.child(roomCode).get().await()
+            withTimeout(10000) { // 10 second timeout
+                val snapshot = roomsRef.child(roomCode).get().await()
 
-            if (!snapshot.exists()) {
-                return Result.failure(Exception("Room not found"))
+                if (!snapshot.exists()) {
+                    return@withTimeout Result.failure(Exception("Room not found"))
+                }
+
+                val room = snapshot.getValue(Room::class.java)
+                if (room == null) {
+                    return@withTimeout Result.failure(Exception("Invalid room data"))
+                }
+
+                if (room.isFull()) {
+                    return@withTimeout Result.failure(Exception("Room is full"))
+                }
+
+                // Add player2
+                roomsRef.child(roomCode).child("player2").setValue(
+                    PlayerData(name = playerName)
+                ).await()
+
+                // Update room status
+                roomsRef.child(roomCode).child("status").setValue(RoomStatus.SETTING_UP.name).await()
+
+                Result.success("player2")
             }
-
-            val room = snapshot.getValue(Room::class.java)
-            if (room == null) {
-                return Result.failure(Exception("Invalid room data"))
-            }
-
-            if (room.isFull()) {
-                return Result.failure(Exception("Room is full"))
-            }
-
-            // Add player2
-            roomsRef.child(roomCode).child("player2").setValue(
-                PlayerData(name = playerName)
-            ).await()
-
-            // Update room status
-            roomsRef.child(roomCode).child("status").setValue(RoomStatus.SETTING_UP.name).await()
-
-            Result.success("player2")
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Result.failure(Exception("Connection timeout. Please check internet and Firebase setup."))
         } catch (e: Exception) {
             Result.failure(e)
         }
